@@ -122,15 +122,18 @@ app.get('/flight-duration', async (req, res) => {
     try {
         connection = await oracledb.getConnection(dbConfig);
 
-        // SQL query to call the GET_FLIGHT_TIME function
+        // SQL query to call the GET_FLIGHT_TIME function with case-insensitive parameters
         const query = `
-            SELECT GET_FLIGHT_TIME(:fromLocation, :toLocation) AS flight_duration
+            SELECT GET_FLIGHT_TIME(
+                UPPER(:fromLocation),
+                UPPER(:toLocation)
+            ) AS flight_duration
             FROM dual
         `;
 
         const result = await connection.execute(query, {
-            fromLocation: fromLocation,
-            toLocation: toLocation
+            fromLocation: fromLocation.toUpperCase(), // Ensure input is uppercased
+            toLocation: toLocation.toUpperCase() // Ensure input is uppercased
         }, { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
         if (result.rows.length === 0 || result.rows[0].FLIGHT_DURATION === null) {
@@ -151,6 +154,7 @@ app.get('/flight-duration', async (req, res) => {
         }
     }
 });
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
